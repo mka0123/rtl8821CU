@@ -1328,6 +1328,105 @@ EXTRA_CFLAGS += -mfloat-abi=hard
 endif
 endif
 
+####START RASPBERRY PI SUPPORT
+
+ifeq ($(CONFIG_PLATFORM_ARM_RPI), y)
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
+ARCH ?= arm
+CROSS_COMPILE ?=
+KVER ?= $(shell uname -r)
+KSRC := /lib/modules/$(KVER)/build
+MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/
+INSTALL_PREFIX :=
+endif
+
+ifeq ($(CONFIG_PLATFORM_ARM64_RPI), y)
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
+ARCH ?= arm64
+CROSS_COMPILE ?=
+KVER ?= $(shell uname -r)
+KSRC := /lib/modules/$(KVER)/build
+MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/
+INSTALL_PREFIX :=
+endif
+
+####END RASPBERRY PI SUPPORT
+
+ifeq ($(CONFIG_APPEND_VENDOR_IE_ENABLE), y)
+EXTRA_CFLAGS += -DCONFIG_APPEND_VENDOR_IE_ENABLE
+endif
+
+ifeq ($(CONFIG_RTW_DEBUG), y)
+EXTRA_CFLAGS += -DCONFIG_RTW_DEBUG
+EXTRA_CFLAGS += -DRTW_LOG_LEVEL=$(CONFIG_RTW_LOG_LEVEL)
+endif
+
+EXTRA_CFLAGS += -DDM_ODM_SUPPORT_TYPE=0x04
+
+ifeq ($(CONFIG_RTW_VIRTUAL_INTF), y)
+EXTRA_CFLAGS += -DRTW_VIRTUAL_INTF=1
+endif
+
+# { FriendlyARM boards support
+ifeq ($(CONFIG_VENDOR_FRIENDLYARM), y)
+MODULE_NAME = rtl8821CU
+
+ifeq ($(KERNELRELEASE),)
+$(info ********************************************************************************)
+$(info *  Building module - $(MODULE_NAME).ko for FriendlyARM boards)
+endif
+
+ifneq ($(BACKPORT_DIR),)
+include $(BACKPORT_DIR)/versions
+
+ifeq ($(BACKPORTED_LINUX_VERSION_CODE),)
+$(error "BACKPORTED_LINUX_VERSION_CODE is undefined")
+endif
+
+NOSTDINC_FLAGS += \
+	-I$(BACKPORT_DIR)/backport-include/ \
+	-I$(BACKPORT_DIR)/backport-include/uapi \
+	-I$(BACKPORT_DIR)/include/ \
+	-I$(BACKPORT_DIR)/include/uapi \
+	-include backport/backport.h \
+	$(call backport-cc-disable-warning, unused-but-set-variable) \
+	-DCPTCFG_VERSION=\"$(BACKPORTS_VERSION)\" \
+	-DCPTCFG_KERNEL_VERSION=\"$(BACKPORTED_KERNEL_VERSION)\" \
+	-DCPTCFG_KERNEL_NAME=\"$(BACKPORTED_KERNEL_NAME)\" \
+	-DCPTCFG_KERNEL_CODE=$(BACKPORTED_LINUX_VERSION_CODE)
+
+KBUILD_EXTRA_SYMBOLS += $(BACKPORT_DIR)/Module.symvers
+endif
+
+EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
+EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
+ARCH ?= arm64
+CROSS_COMPILE ?= aarch64-linux-
+KSRC ?= /opt/FriendlyARM/build/linux-4.4.y
+KLIB ?= /tmp/wireless-modules
+INSTALL_PREFIX :=
+
+ifeq ($(CONFIG_PLATFORM_ANDROID), y)
+ifeq ($(KERNELRELEASE),)
+$(info *  Building driver with Android support)
+endif
+EXTRA_CFLAGS += -DCONFIG_CONCURRENT_MODE
+EXTRA_CFLAGS += -DCONFIG_PLATFORM_ANDROID
+endif
+
+EXTRA_CFLAGS += -Wno-uninitialized
+
+ifeq ($(KERNELRELEASE),)
+$(info *)
+$(info *    Kernel TOP-Dir: $(KSRC) )
+$(info *)
+$(info *  Copyright 2021 FriendlyARM (http://www.friendlyarm.com/))
+$(info ********************************************************************************)
+endif
+endif # END of VENDOR_FRIENDLYARM }
+
 ifeq ($(CONFIG_APPEND_VENDOR_IE_ENABLE), y)
 EXTRA_CFLAGS += -DCONFIG_APPEND_VENDOR_IE_ENABLE
 endif
