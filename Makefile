@@ -1404,7 +1404,7 @@ EXTRA_CFLAGS += -DCONFIG_LITTLE_ENDIAN
 EXTRA_CFLAGS += -DCONFIG_IOCTL_CFG80211 -DRTW_USE_CFG80211_STA_EVENT
 ARCH ?= arm64
 CROSS_COMPILE ?= aarch64-linux-
-KSRC ?= /opt/FriendlyARM/build/linux-4.4.y
+KSRC ?= /opt/FriendlyARM/build/linux-6.1.y
 KLIB ?= /tmp/wireless-modules
 INSTALL_PREFIX :=
 
